@@ -75,6 +75,7 @@ public class BuildTagTree {
 
     private static List<TagNode> buildTagNode(String line){
         String tagLine = line.trim();
+        Stack<TagNode> tagNodeStack = new Stack<>();
         List<TagNode> tagNodeList = new ArrayList<>();
         int tagStartIndex = tagLine.indexOf(TAG_START);
         int tagEndIndex = tagLine.indexOf(TAG_END);
@@ -82,12 +83,13 @@ public class BuildTagTree {
             TagNode tagNode = new TagNode();
             tagNode.setTagName(getTagName(tagLine));
             tagNode.setTagProperty(getTagProp(tagLine));
-            tagNodeList.add(new TagNode())
-        }
-        while (tagEndIndex < tagLine.length()){
+            tagNode.setTagValue(null);
+            tagNode.setChildTagNode(null);
+            tagNodeStack.push(tagNode);
+        }else {//一行有多个标签
 
         }
-        String tag = line.substring(tagStartIndex, tagEndIndex);
+
     }
 
     private static String getTagName(String line){
@@ -147,20 +149,20 @@ public class BuildTagTree {
                     }
                     int quotFirstIndex = line.indexOf("\"", equalIndex);
                     int quotSecondIndex = line.indexOf("\"", quotFirstIndex);
-                    if(quotFirstIndex > 0 && quotSecondIndex > 0){
+                    if(quotFirstIndex > 0 && quotSecondIndex > 0 && quotFirstIndex < tagEndIndex && quotSecondIndex < tagEndIndex){
                         propValue = line.substring(quotFirstIndex + 1, quotSecondIndex);
-                        k = quotSecondIndex;
                     }
                     if(propKey != null && propValue != null){
                         tagPropMap.put(propKey, propValue);
+                        k = quotSecondIndex + 1;
                     }
                 }
             }
         }
-        if(k == tagEndIndex){//没有空格
-            return null; //该标签没有属性
-        }
+        return tagPropMap;
     }
+
+
     private static boolean reachEnd(char tmp){
         return " ".equals(tmp) || TAG_END.equals(tmp);
     }
