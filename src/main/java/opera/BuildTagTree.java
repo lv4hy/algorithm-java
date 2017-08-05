@@ -74,42 +74,92 @@ public class BuildTagTree {
      * */
 
     private static List<TagNode> buildTagNode(String line){
+        String tagLine = line.trim();
         List<TagNode> tagNodeList = new ArrayList<>();
-        for(int i = 0; i < line.length(); i ++){
-            if(TAG_START.equals(line.charAt(i))){
-                //遇到标签的开头,找到标签名
-                int k = i + 1;
-                String tagName;
-                TagNode tagNode = new TagNode();
-                while(!reachEnd(line.charAt(k))){
-                    k ++;
-                }
-                tagName = line.substring(i + 1, k);
-                tagNode.setTagName(tagName);
-                //如果该标签没结束，则取出标签的属性MAP
-                Map<String, Object> tagPropMap = new HashMap<>();
-                if(!TAG_END.equals(line.charAt(k))){
-                    while(" ".equals(line.charAt(k))){
-                        k++;
-                    }
-                    int p = k;
-                    while(!reachEnd(line.charAt(p))){
-                        p++;
-                    }
-                    String tagProp = line.substring(k, p);
-                    getTagProp(tagPropMap, tagProp);
-                }else {
+        int tagStartIndex = tagLine.indexOf(TAG_START);
+        int tagEndIndex = tagLine.indexOf(TAG_END);
+        if(tagEndIndex == tagLine.length() - 1){//一行只有一个标签
+            TagNode tagNode = new TagNode();
+            tagNode.setTagName(getTagName(tagLine));
+            tagNode.setTagProperty(getTagProp(tagLine));
+            tagNodeList.add(new TagNode())
+        }
+        while (tagEndIndex < tagLine.length()){
 
+        }
+        String tag = line.substring(tagStartIndex, tagEndIndex);
+    }
+
+    private static String getTagName(String line){
+        String tagName = null;
+        int tagStartIndex = line.indexOf(TAG_START);
+        int tagEndIndex = line.indexOf(TAG_END);
+        int k = tagStartIndex;
+        while(k < tagEndIndex){
+            if(!" ".equals(line.charAt(k))){
+                k++;
+            }else {
+                if(k < tagEndIndex){
+                    tagName = line.substring(tagStartIndex + 1, k);
                 }
             }
         }
+        if(k == tagEndIndex){
+            tagName = line.substring(tagStartIndex + 1, tagEndIndex);
+        }
+        if(tagName != null){
+            return tagName;
+        }else {
+            throw new IllegalArgumentException("标签解释异常,line = "+line);
+        }
     }
 
-    private static void getTagProp(Map<String, Object> tagPropMap, String keyValue){
-        if(keyValue == null || tagPropMap == null){
-            return;
+    private static Map<String, Object> getTagProp(String line){
+        Map<String, Object> tagPropMap = new HashMap<>();
+        String propKey = null;
+        String propValue = null;
+        int tagStartIndex = line.indexOf(TAG_START);
+        int tagEndIndex = line.indexOf(TAG_END);
+        int k = tagStartIndex;
+        while(k < tagEndIndex){
+            if(!" ".equals(line.charAt(k))){
+                k ++;
+            }else {
+                if(k < tagEndIndex){
+                    while (" ".equals(line.charAt(k))){
+                        k++;
+                    }
+                    int t = k;
+                    int equalIndex = line.indexOf("=", k);
+                    int z = equalIndex;
+                    while (!" ".equals(line.charAt(t))){
+                        t ++;
+                    }
+                    if(t < equalIndex){
+                        z = t;
+                    }
+                    if(equalIndex > 0 && z < tagEndIndex){
+                        propKey = line.substring(k, z);
+                    }else {
+                        if(equalIndex < 0 || z > tagEndIndex){
+                            throw new IllegalArgumentException("该行标签有误, line= "+line);
+                        }
+                    }
+                    int quotFirstIndex = line.indexOf("\"", equalIndex);
+                    int quotSecondIndex = line.indexOf("\"", quotFirstIndex);
+                    if(quotFirstIndex > 0 && quotSecondIndex > 0){
+                        propValue = line.substring(quotFirstIndex + 1, quotSecondIndex);
+                        k = quotSecondIndex;
+                    }
+                    if(propKey != null && propValue != null){
+                        tagPropMap.put(propKey, propValue);
+                    }
+                }
+            }
         }
-
+        if(k == tagEndIndex){//没有空格
+            return null; //该标签没有属性
+        }
     }
     private static boolean reachEnd(char tmp){
         return " ".equals(tmp) || TAG_END.equals(tmp);
